@@ -15,8 +15,13 @@ import streamlit as st
 
 # Load the Excel file
 def load_data(filepath):
-    df = pd.read_excel("/content/drive/MyDrive/meat/meat_read.xlsx")
+    df = pd.read_excel(filepath)
     return df
+filepath = st.filepath("/content/drive/MyDrive/meat/meat_read.xlsx", type=["xlsx"])
+
+if filepath is not None:
+    df = load_data(filepath)
+
 
 # Preprocess exclude keywords into a flat list
 def get_exclude_keywords(df):
