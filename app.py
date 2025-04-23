@@ -8,75 +8,44 @@ Original file is located at
 """
 
 
-# Import required libraries
-import pandas as pd
-import re
-import streamlit as st
-
 import streamlit as st
 import pandas as pd
 
-# Load the Excel file
 def load_data(uploaded_file):
-    df = pd.read_excel(uploaded_file)
-    return df
+    return pd.read_excel(uploaded_file)
 
-uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
-
-if uploaded_file is not None:
-    df = load_data(uploaded_file)
-    st.write(df.head())  # Optional: Show a preview
-
-
-
-# Preprocess exclude keywords into a flat list
-def get_exclude_keywords(df):
-    exclude_keywords = df['Exclude Retailer description'].dropna().astype(str).tolist()
-    # Flatten comma-separated values
-    flat_keywords = []
-    for keyword in exclude_keywords:
-        flat_keywords.extend([k.strip().upper() for k in keyword.split(',')])
-    return set(flat_keywords)
-
-# Preprocess valid consolidated keywords
-def get_consolidated_keywords(df):
-    return df['Consolidated nan descript'].dropna().unique().tolist()
-
-# Predict function to match description
-
-def predict_consolidated_description(description, consolidated_keywords, exclude_keywords):
-    description_upper = description.upper()
-    # Check for exclude keywords
-    for word in exclude_keywords:
-        if re.search(rf"\\b{re.escape(word)}\\b", description_upper):
-            return "Exclude"
-    # Check for valid consolidated keywords
-    for keyword in consolidated_keywords:
-        keyword_parts = keyword.split()
-        for part in keyword_parts:
-            if re.search(rf"\\b{re.escape(part)}\\b", description_upper):
-                return keyword
-    return "No Match"
-
-# Streamlit App
 def main():
     st.title("Meat Description Classifier")
-    st.write("Upload an Excel file with the required columns to classify meat descriptions.")
 
-    uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
+    uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"], key="meat_uploader")
 
     if uploaded_file is not None:
         df = load_data(uploaded_file)
-        exclude_keywords = get_exclude_keywords(df)
-        consolidated_keywords = get_consolidated_keywords(df)
+        st.write("File Preview:")
+        st.write(df.head())
 
-        st.write("### Enter a Description to Predict")
-        input_description = st.text_input("Best Received External Description")
+        # Your prediction logic goes here
+        description_input = st.text_input("Enter product description to predict:")
+        if description_input:
+            prediction = predict_description(description_input, df)
+            st.success(f"Predicted Consolidated nan descript: {prediction}")
 
-        if st.button("Predict"):
-            result = predict_consolidated_description(input_description, consolidated_keywords, exclude_keywords)
-            st.write(f"### Predicted Consolidated nan descript:")
-            st.success(result)
+def predict_description(input_text, df):
+    input_text = input_text.lower()
 
-if __name__ == '__main__':
+    exclude_keywords = df["Exclude Retailer description"].dropna().unique()
+    consolidated_keywords = df["Consolidated nan descript"].dropna().unique()
+
+    for keyword in exclude_keywords:
+        if keyword.lower() in input_text:
+            return "Excluded due to retailer keyword"
+
+    for desc in consolidated_keywords:
+        if any(word in input_text for word in desc.lower().split()):
+            return desc
+
+    return "No matching Consolidated nan descript found"
+
+if __name__ == "__main__":
     main()
+
