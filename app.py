@@ -13,14 +13,20 @@ import pandas as pd
 import re
 import streamlit as st
 
-# Load the Excel file
-def load_data(filepath):
-    df = pd.read_excel(filepath)
-    return df
-filepath = st.filepath("/content/drive/MyDrive/meat/meat_read.xlsx", type=["xlsx"])
+import streamlit as st
+import pandas as pd
 
-if filepath is not None:
-    df = load_data(filepath)
+# Load the Excel file
+def load_data(uploaded_file):
+    df = pd.read_excel(uploaded_file)
+    return df
+
+uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
+
+if uploaded_file is not None:
+    df = load_data(uploaded_file)
+    st.write(df.head())  # Optional: Show a preview
+
 
 
 # Preprocess exclude keywords into a flat list
